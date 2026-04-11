@@ -1,18 +1,58 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/websocket"
 )
 
-func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hello %s!", w)
-	})
+var upgrader = websocket.Upgrader{}
 
-	log.Println("Listening on :8080...")
+func handleClient(conn *websocket.Conn) {
+
+	// The defer function assure when the function return, this line is called
+	defer conn.Close()
+
+	for {
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			break
+		}
+
+		log.Println(string(msg))
+
+		conn.WriteMessage(websocket.TextMessage, []byte("heartbeat"))
+	}
+}
+
+func heartbeat() {
+	http.HandleFunc("/heartbeat", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+
+		// Create a Go for every client
+		go handleClient(conn)
+	})
+}
+
+func server() {
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
+
+	log.Println("Listening on :8080...")
+}
+
+func main() {
+
+	// Routes
+	{
+		heartbeat()
+	}
+
+	// Server
+	server()
 }
