@@ -26,8 +26,8 @@ func handleClient(conn *websocket.Conn) {
 	}
 }
 
-func heartbeat() {
-	http.HandleFunc("/heartbeat", func(w http.ResponseWriter, r *http.Request) {
+func machine() {
+	http.HandleFunc("/machine", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return
@@ -50,7 +50,7 @@ func main() {
 
 	// Routes
 	{
-		heartbeat()
+		machine()
 	}
 
 	// Server
