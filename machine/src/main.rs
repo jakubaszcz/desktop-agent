@@ -5,11 +5,8 @@ use tungstenite::{connect, Utf8Bytes};
 fn main() {
     let (tx, rx) = mpsc::channel();
 
-    let (mut socket, _) = connect("ws://localhost:8080/heartbeat")
-        .expect("Failed to connect");
-
     thread::spawn(move || {
-        let (mut socket, _) = connect("ws://localhost:8080/heartbeat")
+        let (mut socket, _) = connect("ws://localhost:8080/machine")
             .expect("Failed to connect");
 
         loop {
@@ -24,7 +21,7 @@ fn main() {
             thread::sleep(time::Duration::from_secs(5));
         }
     });
- 
+
     loop {
         // tx.send("message").unwrap();
     }
