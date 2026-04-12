@@ -7,7 +7,7 @@ fn main() {
 
         loop {
             socket.send(tungstenite::Message::Text(
-                Utf8Bytes::from(r#"{"type":"heartbeat", "from":"warden"}"#.to_string())
+                Utf8Bytes::from(r#"{"type":"heartbeat","from":"warden"}"#.to_string())
             )).unwrap();
 
             thread::sleep(time::Duration::from_secs(5));

@@ -75,7 +75,7 @@ fn main() {
 
         loop {
             socket.send(tungstenite::Message::Text(
-                Utf8Bytes::from(r#"{"type":"heartbeat"}"#.to_string())
+                Utf8Bytes::from(r#"{"type":"heartbeat","from":"machine"}"#.to_string())
             )).unwrap();
 
             if let Ok(keybind) = rx.try_recv() {
