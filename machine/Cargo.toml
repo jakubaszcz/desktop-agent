@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 tungstenite = "0.29.0"
+global-hotkey = "0.7.0"
+winit = "0.31.0-beta.2"
