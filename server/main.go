@@ -50,6 +50,18 @@ func warden() {
 	})
 }
 
+func window() {
+	http.HandleFunc("/window", func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+
+		// Create a Go for every client
+		go handleClient(conn)
+	})
+}
+
 func server() {
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
@@ -64,6 +76,7 @@ func main() {
 	{
 		machine()
 		warden()
+		window()
 	}
 
 	// Server
