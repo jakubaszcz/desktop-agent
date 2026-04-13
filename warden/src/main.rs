@@ -2,10 +2,6 @@ mod watcher;
 mod manager;
 
 use std::{thread, time};
-use std::io::Read;
-use std::path::{Path, PathBuf};
-use std::sync::mpsc;
-use notify::{recommended_watcher, Event, EventKind, Watcher};
 use tungstenite::{connect, Utf8Bytes};
 
 fn main() {
