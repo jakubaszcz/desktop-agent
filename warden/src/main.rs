@@ -120,9 +120,11 @@ fn main() {
     let root = dirs::home_dir().unwrap().join("my-desktop-agent");
     let download_dir = dirs::download_dir().unwrap();
 
-
+    let sort_dir = dirs::home_dir().unwrap().join("my-desktop-agent-sort");
+    
     {
         std::fs::create_dir_all(&root).unwrap();
+        std::fs::create_dir_all(&sort_dir).unwrap();
     }
 
     thread::spawn(move || {
@@ -137,5 +139,15 @@ fn main() {
         }
     });
 
+    // Start the watcher thread for the sort directory
+    {
+        let root_clone = root.clone();
+
+        thread::spawn(|| {
+            watcher(root_clone, sort_dir);
+        });
+    }
+    
+    // Start the watcher thread for the download directory
     watcher(root, download_dir);
 }
