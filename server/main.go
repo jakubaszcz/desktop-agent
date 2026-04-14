@@ -93,8 +93,14 @@ func launchWindow() {
 	windowLauching = true
 	go func() {
 		cmd := exec.Command(getOSInterface())
-		cmd.Start()
-		cmd.Wait()
+		start := cmd.Start()
+		if start != nil {
+			return
+		}
+		wait := cmd.Wait()
+		if wait != nil {
+			return
+		}
 		windowLauching = false
 	}()
 }
