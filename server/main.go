@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os/exec"
 
 	"github.com/gorilla/websocket"
 )
@@ -14,6 +15,7 @@ type Message struct {
 }
 
 var windowConn *websocket.Conn
+var windowLauching bool
 
 var upgrader = websocket.Upgrader{}
 
@@ -62,13 +64,25 @@ func handleMachine(conn *websocket.Conn) {
 		case "heartbeat":
 			log.Println("heartbeat from machine")
 		case "keybind":
-			if windowConn == nil {
-				// Launch window
-			}
+			launchWindow()
 		}
 
 		conn.WriteMessage(websocket.TextMessage, raw)
 	}
+}
+
+func launchWindow() {
+	if windowConn != nil || windowLauching {
+		return
+	}
+
+	windowLauching = true
+	go func() {
+		cmd := exec.Command("./interface.exe")
+		cmd.Start()
+		cmd.Wait()
+		windowLauching = false
+	}()
 }
 
 func handleWarden(conn *websocket.Conn) {
