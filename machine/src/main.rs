@@ -23,8 +23,8 @@ impl App {
         let manager = GlobalHotKeyManager::new().unwrap();
 
         let custom_copy_hotkey = HotKey::new(
-            Some(Modifiers::CONTROL | Modifiers::ALT),
-            Code::KeyA,
+            Some(Modifiers::ALT),
+            Code::KeyW,
         );
 
         let id = custom_copy_hotkey.id;
