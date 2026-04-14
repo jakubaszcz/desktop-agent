@@ -1,11 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 )
+
+type Message struct {
+	Type   string `json:"type"`
+	Action string `json:"action"`
+}
 
 var windowConn *websocket.Conn
 
@@ -42,14 +48,26 @@ func handleMachine(conn *websocket.Conn) {
 	defer conn.Close()
 
 	for {
-		_, msg, err := conn.ReadMessage()
+		_, raw, err := conn.ReadMessage()
 		if err != nil {
 			break
 		}
 
-		log.Println(string(msg))
+		var msg Message
+		err = json.Unmarshal(raw, &msg)
+		if err != nil {
+			log.Println(err)
+		}
+		switch msg.Type {
+		case "heartbeat":
+			log.Println("heartbeat from machine")
+		case "keybind":
+			if windowConn == nil {
+				// Launch window
+			}
+		}
 
-		conn.WriteMessage(websocket.TextMessage, []byte("heartbeat"))
+		conn.WriteMessage(websocket.TextMessage, raw)
 	}
 }
 
