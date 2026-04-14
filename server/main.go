@@ -7,9 +7,53 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var windowConn *websocket.Conn
+
 var upgrader = websocket.Upgrader{}
 
-func handleClient(conn *websocket.Conn) {
+func handleWindow(conn *websocket.Conn) {
+
+	windowConn = conn
+
+	// The defer function assure when the function return, this line is called
+	defer func() {
+		err := windowConn.Close()
+		if err != nil {
+			return
+		}
+		windowConn = nil
+	}()
+
+	for {
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			break
+		}
+
+		log.Println(string(msg))
+
+		conn.WriteMessage(websocket.TextMessage, []byte("heartbeat"))
+	}
+}
+
+func handleMachine(conn *websocket.Conn) {
+
+	// The defer function assure when the function return, this line is called
+	defer conn.Close()
+
+	for {
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			break
+		}
+
+		log.Println(string(msg))
+
+		conn.WriteMessage(websocket.TextMessage, []byte("heartbeat"))
+	}
+}
+
+func handleWarden(conn *websocket.Conn) {
 
 	// The defer function assure when the function return, this line is called
 	defer conn.Close()
@@ -34,7 +78,7 @@ func machine() {
 		}
 
 		// Create a Go for every client
-		go handleClient(conn)
+		go handleMachine(conn)
 	})
 }
 
@@ -46,7 +90,7 @@ func warden() {
 		}
 
 		// Create a Go for every client
-		go handleClient(conn)
+		go handleWarden(conn)
 	})
 }
 
@@ -58,7 +102,7 @@ func window() {
 		}
 
 		// Create a Go for every client
-		go handleClient(conn)
+		go handleWindow(conn)
 	})
 }
 
