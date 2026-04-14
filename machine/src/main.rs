@@ -1,5 +1,6 @@
 use std::{thread, time};
 use std::sync::mpsc;
+use std::time::{Duration, Instant};
 use global_hotkey::{GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
 use global_hotkey::hotkey::{Code, HotKey, Modifiers};
 use tungstenite::{connect, Utf8Bytes};
@@ -73,16 +74,24 @@ fn main() {
         let (mut socket, _) = connect("ws://localhost:8080/machine")
             .expect("Failed to connect");
 
-        loop {
-            socket.send(tungstenite::Message::Text(
-                Utf8Bytes::from(r#"{"type":"heartbeat","from":"machine"}"#.to_string())
-            )).unwrap();
+        let mut last_heartbeat = Instant::now();
 
+        let heartbeat_interval = time::Duration::from_secs(5);
+        let thread_interval = time::Duration::from_millis(50);
+
+        loop {
             if let Ok(keybind) = rx.try_recv() {
                 socket.send(tungstenite::Message::Text(Utf8Bytes::from(keybind))).unwrap();
             }
 
-            thread::sleep(time::Duration::from_secs(5));
+            if last_heartbeat.elapsed() >= heartbeat_interval {
+                socket.send(tungstenite::Message::Text(
+                    Utf8Bytes::from(r#"{"type":"heartbeat","from":"machine"}"#.to_string())
+                )).unwrap();
+                last_heartbeat = Instant::now();
+            }
+
+            thread::sleep(thread_interval);
         }
     });
     event_loop.run_app(app).unwrap();
