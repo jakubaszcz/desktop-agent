@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"runtime"
 
 	"github.com/gorilla/websocket"
 )
@@ -71,6 +72,19 @@ func handleMachine(conn *websocket.Conn) {
 	}
 }
 
+func getOSInterface() string {
+	switch runtime.GOOS {
+	case "windows":
+		return "./interface.exe"
+	case "darwin":
+		return "./interface.app"
+	case "linux":
+		return "./interface"
+	default:
+		return "./interface"
+	}
+}
+
 func launchWindow() {
 	if windowConn != nil || windowLauching {
 		return
@@ -78,7 +92,7 @@ func launchWindow() {
 
 	windowLauching = true
 	go func() {
-		cmd := exec.Command("./interface.exe")
+		cmd := exec.Command(getOSInterface())
 		cmd.Start()
 		cmd.Wait()
 		windowLauching = false
