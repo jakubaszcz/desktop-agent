@@ -1,0 +1,3 @@
+﻿echo Building MSI installer...
+candle msi-installer.wxs
+light msi-installer.wixobj -o installer.msi
