@@ -6,7 +6,7 @@ cd ..
 :: Server (Go)
 echo Building server...
 cd server
-go build -ldflags="-H windowsgui" -o ../release_windows/server.exe .
+go build -o ../release_windows/server.exe .
 cd ..
 
 :: Machine (Rust)
