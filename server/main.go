@@ -37,10 +37,9 @@ func main() {
 		routes.Window()
 	}
 
+	// Server
+	go routes.Server()
+
 	// Create the stray to close the desktop agent
 	systray.Run(onReady, onExit)
-
-	// Server
-	routes.Server()
-
 }
