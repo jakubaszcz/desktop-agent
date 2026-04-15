@@ -17,6 +17,10 @@ struct App {
     tx: mpsc::Sender<String>
 }
 
+fn close_program() {
+    std::process::exit(0);
+}
+
 impl App {
     fn new(tx: mpsc::Sender<String>) -> Self {
 
@@ -71,23 +75,23 @@ fn main() {
 
 
     thread::spawn(move || {
-        let (mut socket, _) = connect("ws://localhost:8080/machine")
-            .expect("Failed to connect");
+        let (mut socket, _) = connect("ws://localhost:8080/machine").unwrap();
 
         let mut last_heartbeat = Instant::now();
 
-        let heartbeat_interval = time::Duration::from_secs(5);
-        let thread_interval = time::Duration::from_millis(50);
+        let heartbeat_interval = Duration::from_secs(5);
+        let thread_interval = Duration::from_millis(50);
 
         loop {
+
             if let Ok(keybind) = rx.try_recv() {
-                socket.send(tungstenite::Message::Text(Utf8Bytes::from(keybind))).unwrap();
+                if socket.send(tungstenite::Message::Text(Utf8Bytes::from(keybind))).is_err() { close_program(); };
             }
 
             if last_heartbeat.elapsed() >= heartbeat_interval {
-                socket.send(tungstenite::Message::Text(
+                if socket.send(tungstenite::Message::Text(
                     Utf8Bytes::from(r#"{"type":"heartbeat","from":"machine"}"#.to_string())
-                )).unwrap();
+                )).is_err() { close_program(); }
                 last_heartbeat = Instant::now();
             }
 
