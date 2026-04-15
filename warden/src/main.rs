@@ -4,6 +4,10 @@ mod manager;
 use std::{thread, time};
 use tungstenite::{connect, Utf8Bytes};
 
+fn close_program() {
+    std::process::exit(0);
+}
+
 fn main() {
 
     let root = dirs::home_dir().unwrap().join("my-desktop-agent");
@@ -17,12 +21,13 @@ fn main() {
     }
 
     thread::spawn(move || {
-       let (mut socket, _) = connect("ws://localhost:8080/warden").expect("Failed to connect to warden");
-
+       let (mut socket, _) = connect("ws://localhost:8080/warden").unwrap();
         loop {
-            socket.send(tungstenite::Message::Text(
+            if socket.send(tungstenite::Message::Text(
                 Utf8Bytes::from(r#"{"type":"heartbeat","from":"warden"}"#.to_string())
-            )).unwrap();
+            )).is_err() {
+                close_program();
+            };
 
             thread::sleep(time::Duration::from_secs(5));
         }
