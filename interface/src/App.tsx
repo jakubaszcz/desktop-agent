@@ -1,6 +1,7 @@
 import "./App.css";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
+import Header from "./components/Header";
 
 function App() {
 
@@ -40,7 +41,7 @@ function App() {
                     width: "30%",
                     background: "#1e1e1e"
                 }}>
-                {/* This is where the sidebar will go */}
+                <Header />
             </div>
             <div style={
                 {
