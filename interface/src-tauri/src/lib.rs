@@ -1,6 +1,7 @@
 use tauri::{Emitter, Manager};
 use tungstenite::{connect, Utf8Bytes};
 use std::{thread, time};
+use sysinfo::{System};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn close_program() {
@@ -12,6 +13,7 @@ pub fn run() {
         .setup(|app| {
 
             let window = app.get_window("main").unwrap();
+            let handle = app.handle();
 
             // Window settings
             {
@@ -44,6 +46,18 @@ pub fn run() {
                     })).unwrap();
                 }
             }
+
+            let handle_clone = handle.clone();
+            thread::spawn(move || {
+                let mut sys = System::new_all();
+
+                loop {
+                    sys.refresh_all ();
+                    handle_clone.emit("memory-used", sys.used_memory()).unwrap();
+                    handle_clone.emit("total-memory", sys.total_memory()).unwrap();
+                    thread::sleep(time::Duration::from_secs(1));
+                }
+            });
 
             thread::spawn(move || {
                 let (mut socket, _) = connect("ws://localhost:8080/window").unwrap();
