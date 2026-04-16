@@ -1,4 +1,4 @@
-use tauri::Emitter;
+use tauri::{Emitter, Manager};
 use tungstenite::{connect, Utf8Bytes};
 use std::{thread, time};
 
@@ -11,7 +11,24 @@ pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
 
+            let window = app.get_window("main").unwrap();
             let handle = app.handle().clone();
+
+            // Window settings
+            {
+                // Focus on opening
+                window.set_focus().unwrap();
+
+                // Hide the window title bar
+                window.set_decorations(false).unwrap();
+
+                // Handle window size
+                {
+                    window.set_resizable(false).unwrap();
+
+                    window.set_size(tauri::Size::Logical(tauri::LogicalSize::new(1280.0, 720.0))).unwrap();
+                }
+            }
 
             thread::spawn(move || {
                 let (mut socket, _) = connect("ws://localhost:8080/window").unwrap();
