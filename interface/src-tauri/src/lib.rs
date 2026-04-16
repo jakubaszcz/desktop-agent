@@ -12,7 +12,6 @@ pub fn run() {
         .setup(|app| {
 
             let window = app.get_window("main").unwrap();
-            let handle = app.handle().clone();
 
             // Window settings
             {
@@ -27,6 +26,22 @@ pub fn run() {
                     window.set_resizable(false).unwrap();
 
                     window.set_size(tauri::Size::Logical(tauri::LogicalSize::new(1280.0, 720.0))).unwrap();
+                }
+
+                // Window position
+                {
+                    let window_size = window.outer_size().unwrap();
+
+                    let current_screen = window.current_monitor().unwrap().unwrap();
+                    let screen_size = current_screen.size();
+
+                    let position_x = (screen_size.width - window_size.width) / 2;
+                    let position_y = (screen_size.height - window_size.height) / 2;
+
+                    window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
+                        x: position_x as i32,
+                        y: position_y as i32,
+                    })).unwrap();
                 }
             }
 
