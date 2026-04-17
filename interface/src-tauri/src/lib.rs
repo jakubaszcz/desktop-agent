@@ -49,11 +49,11 @@ pub fn run() {
                     let raw = msg.to_string();
 
                     if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&raw) {
-                        let msg_type = parsed.as_object().unwrap().get("type").unwrap().as_str().unwrap();
-                        let msg_from = parsed.as_object().unwrap().get("from").unwrap().as_str().unwrap();
-                        let msg_command = parsed.as_object().unwrap().get("data").unwrap().as_str().unwrap();
+                        let msg_type = parsed["type"].as_str().unwrap_or("unknown");
+                        let msg_from = parsed["from"].as_str().unwrap_or("unknown");
+                        let msg_data = parsed["data"].as_str().unwrap_or("");
 
-                        println!("{} from {}: {}", msg_type, msg_from, msg_command);
+                        println!("{} from {}: {}", msg_type, msg_from, msg_data);
                     }
                 }
                 Err(_) => {}
