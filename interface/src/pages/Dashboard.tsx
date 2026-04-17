@@ -1,7 +1,12 @@
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
+import TabContainer from "./TabContainer";
 
-const Dashboard = () => {
+interface DashboardProps {
+    text: string;
+}
+
+const Dashboard = ({text}: DashboardProps) => {
 
     const [usedMemory, setUsedMemory] = useState<number>(0);
     const [totalMemory, setTotalMemory] = useState<number>(0);
@@ -29,8 +34,15 @@ const Dashboard = () => {
     }, []);
 
     return (
-        <div>
-            <p>Memory: {(usedMemory / 1024 ** 3).toFixed(2)} / {(totalMemory / 1024 ** 3).toFixed(2)} GiB</p>
+        <div style={{
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            boxSizing: "border-box"
+        }}>
+            <TabContainer text={text}>
+                <p>Memory: {(usedMemory / 1024 ** 3).toFixed(2)} / {(totalMemory / 1024 ** 3).toFixed(2)} GiB</p>
+            </TabContainer>
         </div>
     )
 }

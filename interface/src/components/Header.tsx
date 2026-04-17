@@ -12,7 +12,7 @@ const Header = ({ OnClick, IsActive }: HeaderProps) => {
             <div style={{
                 padding: "20px",
                 color: "white",
-                borderBottom: "1px solid #333"
+                borderBottom: "1px solid #2A2B2A"
             }}>
                 <h1 style={{ margin: 0, fontSize: "1.2rem" }}>Desktop Agent</h1>
             </div>

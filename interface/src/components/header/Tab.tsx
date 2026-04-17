@@ -11,12 +11,11 @@ const Tab = ({ text, isActive, onClick }: TabProps) => {
             style={{
                 width: "100%",
                 outline: "none",
-                background: isActive ? "#333" : "none",
+                background: isActive ? "#2A2B2A" : "none",
                 border: "none",
                 padding: "20px",
                 color: "white",
-                borderBottom: "1px solid #333",
-                cursor: "pointer",
+                borderBottom: "1px solid #2A2B2A",
                 textAlign: "left"
             }}
         >
