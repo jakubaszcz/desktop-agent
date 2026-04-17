@@ -48,8 +48,12 @@ pub fn run() {
                 Ok(msg) => {
                     let raw = msg.to_string();
 
-                    if let Ok(_parsed) = serde_json::from_str::<serde_json::Value>(&raw) {
-                        // Emit the message to the frontend
+                    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&raw) {
+                        let msg_type = parsed.as_object().unwrap().get("type").unwrap().as_str().unwrap();
+                        let msg_from = parsed.as_object().unwrap().get("from").unwrap().as_str().unwrap();
+                        let msg_command = parsed.as_object().unwrap().get("data").unwrap().as_str().unwrap();
+
+                        println!("{} from {}: {}", msg_type, msg_from, msg_command);
                     }
                 }
                 Err(_) => {}

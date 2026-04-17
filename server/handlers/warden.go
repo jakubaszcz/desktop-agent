@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"server/structures"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -24,14 +26,37 @@ func HandleWarden(conn *websocket.Conn) {
 	defer conn.Close()
 
 	for {
-		_, msg, err := conn.ReadMessage()
+		_, raw, err := conn.ReadMessage()
 		if err != nil {
 			break
 		}
 
-		log.Println(string(msg))
+		var msg structures.Message
+		err = json.Unmarshal(raw, &msg)
+		if err != nil {
+			log.Println(err)
+		}
+		switch msg.Type {
+		case "heartbeat":
+			log.Println("heartbeat from warden")
+		case "command":
+			parts := strings.SplitN(msg.Action, ":", 2)
 
-		conn.WriteMessage(websocket.TextMessage, []byte("heartbeat"))
+			if len(parts) != 2 {
+				return
+			}
+
+			target := parts[0]
+			command := parts[1]
+
+			if fn, ok := Senders[target]; ok {
+				fn("warden", command)
+			} else {
+				return
+			}
+		}
+
+		conn.WriteMessage(websocket.TextMessage, raw)
 	}
 }
 

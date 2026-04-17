@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os/exec"
 	"runtime"
@@ -13,10 +14,6 @@ import (
 
 var windowConn *websocket.Conn
 var windowLauching bool
-
-var sender = map[string]func(string, string){
-	"warden": SendToWarden,
-}
 
 func HandleWindow(conn *websocket.Conn) {
 
@@ -55,7 +52,7 @@ func HandleWindow(conn *websocket.Conn) {
 			target := parts[0]
 			command := parts[1]
 
-			if fn, ok := sender[target]; ok {
+			if fn, ok := Senders[target]; ok {
 				fn("window", command)
 			} else {
 				return
@@ -76,6 +73,24 @@ func GetOSInterface() string {
 		return "./interface"
 	default:
 		return "./interface"
+	}
+}
+
+func SendToWindow(from string, cmd string) {
+	msg := Message{
+		Type: "command",
+		From: from,
+		Data: cmd,
+	}
+
+	jsonBytes, err := json.Marshal(msg)
+	if err != nil {
+		fmt.Println("Erreur JSON:", err)
+		return
+	}
+
+	if windowConn != nil {
+		windowConn.WriteMessage(websocket.TextMessage, jsonBytes)
 	}
 }
 
