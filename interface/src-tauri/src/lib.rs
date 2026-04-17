@@ -1,14 +1,75 @@
 use tauri::{Emitter, Manager};
 use tungstenite::{connect, Utf8Bytes};
 use std::{thread, time};
+use std::sync::Mutex;
+use tauri::State;
 use sysinfo::{System};
 
+struct SocketSender(Mutex<Option<std::sync::mpsc::Sender<String>>>);
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn close_program() {
     std::process::exit(0);
 }
 
 pub fn run() {
+
+    let (tx, rx) = std::sync::mpsc::channel::<String>();
+
+    thread::spawn(move || {
+        let (mut socket, _) = connect("ws://localhost:8080/window").unwrap();
+
+        let mut last_heartbeat = time::Instant::now();
+
+        let heartbeat_interval = time::Duration::from_secs(5);
+        let thread_interval = time::Duration::from_millis(50);
+
+        loop {
+
+            if last_heartbeat.elapsed() >= heartbeat_interval {
+                if socket.send(tungstenite::Message::Text(
+                    Utf8Bytes::from(r#"{"type":"heartbeat","from":"window"}"#.to_string())
+                )).is_err() {
+                    close_program();
+                };
+                last_heartbeat = time::Instant::now();
+            }
+
+            if let Ok(msg) = rx.try_recv() {
+                socket.send(tungstenite::Message::Text(Utf8Bytes::from(msg))).unwrap();
+            }
+
+            match socket.get_mut() {
+                tungstenite::stream::MaybeTlsStream::Plain(stream) => {
+                    stream.set_nonblocking(true).unwrap();
+                }
+                _ => {}
+            }
+            match socket.read() {
+                Ok(msg) => {
+                    let raw = msg.to_string();
+
+                    if let Ok(_parsed) = serde_json::from_str::<serde_json::Value>(&raw) {
+                        // Emit the message to the frontend
+                    }
+                }
+                Err(_) => {}
+            }
+
+            thread::sleep(thread_interval);
+        }
+    });
+
+    #[tauri::command]
+    fn send_to_server(msg: String, sender: State<SocketSender>) {
+        if let Ok(lock) = sender.0.lock() {
+            if let Some(tx) = lock.as_ref() {
+                println!("Sending message to server: {}", msg);
+                tx.send(msg).unwrap();
+            }
+        }
+    }
+
+
     tauri::Builder::default()
         .setup(|app| {
 
@@ -58,49 +119,10 @@ pub fn run() {
                     thread::sleep(time::Duration::from_secs(1));
                 }
             });
-
-            thread::spawn(move || {
-                let (mut socket, _) = connect("ws://localhost:8080/window").unwrap();
-
-                let mut last_heartbeat = time::Instant::now();
-
-                let heartbeat_interval = time::Duration::from_secs(5);
-                let thread_interval = time::Duration::from_millis(50);
-
-                loop {
-
-                    if last_heartbeat.elapsed() >= heartbeat_interval {
-                        if socket.send(tungstenite::Message::Text(
-                            Utf8Bytes::from(r#"{"type":"heartbeat","from":"window"}"#.to_string())
-                        )).is_err() {
-                            close_program();
-                        };
-                        last_heartbeat = time::Instant::now();
-                    }
-
-                    match socket.get_mut() {
-                        tungstenite::stream::MaybeTlsStream::Plain(stream) => {
-                            stream.set_nonblocking(true).unwrap();
-                        }
-                        _ => {}
-                    }
-                    match socket.read() {
-                        Ok(msg) => {
-                            let raw = msg.to_string();
-
-                            if let Ok(_parsed) = serde_json::from_str::<serde_json::Value>(&raw) {
-                                // Emit the message to the frontend
-                            }
-                        }
-                        Err(_) => {}
-                    }
-
-                    thread::sleep(thread_interval);
-                }
-            });
-
             Ok(())
         })
+        .manage(SocketSender(Mutex::new(Some(tx))))
+        .invoke_handler(tauri::generate_handler![send_to_server])
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
