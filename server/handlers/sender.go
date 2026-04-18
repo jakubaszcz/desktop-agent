@@ -4,3 +4,7 @@ var Senders = map[string]func(string, string){
 	"warden": SendToWarden,
 	"window": SendToWindow,
 }
+
+var ResponseSenders = map[string]func(string, string, string){
+	"window": SendToResponseWindow,
+}

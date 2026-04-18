@@ -94,6 +94,25 @@ func SendToWindow(from string, cmd string) {
 	}
 }
 
+func SendToResponseWindow(from string, cmd string, status string) {
+	msg := Message{
+		Type:   "response",
+		From:   from,
+		Data:   cmd,
+		Status: status,
+	}
+
+	jsonBytes, err := json.Marshal(msg)
+	if err != nil {
+		fmt.Println("Erreur JSON:", err)
+		return
+	}
+
+	if windowConn != nil {
+		windowConn.WriteMessage(websocket.TextMessage, jsonBytes)
+	}
+}
+
 func LaunchWindow() {
 	if windowConn != nil || windowLauching {
 		return

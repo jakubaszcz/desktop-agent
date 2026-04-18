@@ -60,9 +60,10 @@ fn main() {
 
                         if msg_type.eq("command") && !msg_from.eq("unknown"){
                             let json_msg = format!(
-                                r#"{{"type":"command","action":"{}:{}"}}"#,
+                                r#"{{"type":"response","action":"{}:{}:{}"}}"#,
                                 msg_from,
-                                msg_data
+                                msg_data,
+                                "success"
                             );
 
                             println!("{}", json_msg);

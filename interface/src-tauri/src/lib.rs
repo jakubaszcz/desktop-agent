@@ -1,9 +1,21 @@
-use tauri::{Emitter, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use tungstenite::{connect, Utf8Bytes};
 use std::{thread, time};
 use std::sync::Mutex;
 use tauri::State;
 use sysinfo::{System};
+use once_cell::sync::OnceCell;
+
+use serde::Serialize;
+
+#[derive(Serialize)]
+#[derive(Clone)]
+struct Response {
+    data: bool,
+    status: String,
+}
+
+static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 
 struct SocketSender(Mutex<Option<std::sync::mpsc::Sender<String>>>);
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -51,9 +63,18 @@ pub fn run() {
                     if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&raw) {
                         let msg_type = parsed["type"].as_str().unwrap_or("unknown");
                         let msg_from = parsed["from"].as_str().unwrap_or("unknown");
-                        let msg_data = parsed["data"].as_str().unwrap_or("");
 
-                        println!("{} from {}: {}", msg_type, msg_from, msg_data);
+
+                        if msg_type.eq("response") {
+                            let msg_data = parsed["data"].as_str().unwrap_or("");
+                            let msg_status = parsed["status"].as_str().unwrap_or("");
+
+                            APP_HANDLE.get().unwrap().emit("response", Response {
+                                data: false,
+                                status: msg_status.to_string(),
+                            }).unwrap();
+                            println!("{} from {}: {}", msg_type, msg_from, msg_data);
+                        }
                     }
                 }
                 Err(_) => {}
@@ -79,6 +100,8 @@ pub fn run() {
 
             let window = app.get_window("main").unwrap();
             let handle = app.handle();
+
+            APP_HANDLE.set(handle.clone()).unwrap();
 
             // Window settings
             {

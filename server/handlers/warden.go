@@ -13,9 +13,10 @@ import (
 var wardenConn *websocket.Conn
 
 type Message struct {
-	Type string `json:"type"`
-	From string `json:"from"`
-	Data string `json:"data,omitempty"`
+	Type   string `json:"type"`
+	From   string `json:"from"`
+	Data   string `json:"data,omitempty"`
+	Status string `json:"status,omitempty"`
 }
 
 func HandleWarden(conn *websocket.Conn) {
@@ -51,6 +52,22 @@ func HandleWarden(conn *websocket.Conn) {
 
 			if fn, ok := Senders[target]; ok {
 				fn("warden", command)
+			} else {
+				return
+			}
+		case "response":
+			parts := strings.SplitN(msg.Action, ":", 3)
+
+			if len(parts) != 3 {
+				return
+			}
+
+			target := parts[0]
+			command := parts[1]
+			status := parts[2]
+
+			if fn, ok := ResponseSenders[target]; ok {
+				fn("warden", command, status)
 			} else {
 				return
 			}
